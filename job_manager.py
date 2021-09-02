@@ -22,6 +22,6 @@ def write_progress(job_id, percent):
     try:
         progress_file_path = os.path.join(job_id, 'progress.txt')
         with open(progress_file_path, "w") as f:
-            f.write(percent)
+            f.write(str(percent))
     finally:
         mutex.release()

@@ -4,7 +4,7 @@ from werkzeug.utils import secure_filename
 
 
 def current_milli_time():
-    return round(time.time() * 1000)
+    return str(round(time.time() * 1000))
 
 
 def store_and_verify_file(file_from_request, work_dir):

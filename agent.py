@@ -38,14 +38,14 @@ def create_app():
     @api.expect(get_extraction_parser)
     class GetExtractedDataService(Resource):
         @api.expect(get_extraction_parser)
-        def get(self):
+        def post(self):
             try:
                 args = get_extraction_parser.parse_args()
                 job_id = args['job_id']
-                csv_file_path = os.path.join(job_id, 'extracted.csv')
-                return send_file(csv_file_path,
-                                 mimetype='csv',
-                                 attachment_filename=csv_file_path,
+                result_file_path = job_id + '.zip'
+                return send_file(result_file_path,
+                                 mimetype='zip',
+                                 attachment_filename=result_file_path,
                                  as_attachment=True)
             except Exception as e:
                 rv = dict()
@@ -63,7 +63,7 @@ def create_app():
     class GetProgressService(Resource):
         @api.expect(get_progress_parser)
         @api.doc(responses={"response": 'json'})
-        def get(self):
+        def post(self):
             try:
                 args = get_progress_parser.parse_args()
                 job_id = args['job_id']
@@ -98,19 +98,19 @@ def create_app():
             try:
                 payload_from_request = args['payload']
                 work_dir = tempfile.mkdtemp()
-                ret, status_or_payload = store_and_verify_file(payload_from_request, work_dir)
+                ret, status_or_payload_filepath = store_and_verify_file(payload_from_request, work_dir)
                 if ret != 0:
                     rv = dict()
-                    rv['status'] = status_or_payload
+                    rv['status'] = status_or_payload_filepath
                     return rv, 404
                 else:
                     job_id = current_milli_time()
                     os.mkdir(job_id)
                     write_progress(job_id, '0')
-                    thread = Thread(target=run_extractor, args=(job_id, status_or_payload, ))
+                    thread = Thread(target=run_extractor, args=(job_id, status_or_payload_filepath, ))
                     thread.start()
                     rv = dict()
-                    rv['status'] = "Extraction Started"
+                    rv['status'] = job_id
                     return rv, 202
             except Exception as e:
                 rv = dict()
